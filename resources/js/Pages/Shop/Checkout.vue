@@ -579,17 +579,17 @@
                                     <div class="relative">
                                         <input
                                             type="radio"
-                                            id="mobile"
+                                            id="cod"
                                             v-model="selectedMethod"
-                                            value="mobile"
+                                            value="cod"
                                             class="sr-only"
                                         />
                                         <label
-                                            for="mobile"
+                                            for="cod"
                                             :class="[
                                                 'flex flex-col p-6 border-3 rounded-2xl cursor-pointer transition-all duration-300 transform hover:scale-105',
-                                                selectedMethod === 'mobile'
-                                                    ? 'border-orange-500 bg-orange-50 shadow-xl'
+                                                selectedMethod === 'cod'
+                                                    ? 'border-red-500 bg-red-50 shadow-xl'
                                                     : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-lg',
                                             ]"
                                         >
@@ -600,39 +600,47 @@
                                                     class="flex items-center space-x-4"
                                                 >
                                                     <div
-                                                        class="w-12 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center shadow-md"
+                                                        class="w-12 h-8 bg-gradient-to-r from-red-500 to-orange-600 rounded-lg flex items-center justify-center shadow-md"
                                                     >
-                                                        <span
-                                                            class="text-xs font-bold text-white"
-                                                            >MB</span
+                                                        <svg
+                                                            class="w-6 h-6 text-white"
+                                                            fill="none"
+                                                            stroke="currentColor"
+                                                            viewBox="0 0 24 24"
                                                         >
+                                                            <path
+                                                                stroke-linecap="round"
+                                                                stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                                                            />
+                                                        </svg>
                                                     </div>
                                                     <div>
                                                         <span
                                                             class="font-bold text-gray-900 text-lg"
-                                                            >Mobile
-                                                            Banking</span
+                                                            >Cash on
+                                                            Delivery</span
                                                         >
                                                         <p
                                                             class="text-sm text-gray-600 mt-1"
                                                         >
-                                                            Rocket, MCash, Upay
+                                                            Pay when you receive
                                                         </p>
                                                     </div>
                                                 </div>
                                                 <div
                                                     :class="[
                                                         'w-6 h-6 rounded-full border-3 flex items-center justify-center',
-                                                        selectedMethod ===
-                                                        'mobile'
-                                                            ? 'border-orange-500 bg-orange-500'
+                                                        selectedMethod === 'cod'
+                                                            ? 'border-red-500 bg-red-500'
                                                             : 'border-gray-300',
                                                     ]"
                                                 >
                                                     <svg
                                                         v-if="
                                                             selectedMethod ===
-                                                            'mobile'
+                                                            'cod'
                                                         "
                                                         class="w-3 h-3 text-white"
                                                         fill="currentColor"
@@ -649,6 +657,7 @@
                                         </label>
                                     </div>
                                 </div>
+                                <!-- Cash on Delivery Card -->
 
                                 <!-- Dynamic Payment Forms -->
                                 <div class="space-y-8">
@@ -927,7 +936,7 @@
                                                         nagadData.mobileNumber
                                                     "
                                                     type="text"
-                                                    placeholder="01XXXXXXXXX"
+                                                    placeholder="01795547756"
                                                     class="w-full px-6 py-4 border-2 border-gray-300 rounded-2xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200 text-lg"
                                                     :disabled="processing"
                                                 />
@@ -1007,97 +1016,6 @@
                                     </div>
 
                                     <!-- Mobile Banking Form -->
-                                    <div
-                                        v-if="selectedMethod === 'mobile'"
-                                        class="bg-gradient-to-br from-orange-50 to-red-100 rounded-2xl p-8 border border-orange-200 shadow-lg"
-                                    >
-                                        <h4
-                                            class="font-bold text-2xl text-gray-900 mb-6 flex items-center"
-                                        >
-                                            <div
-                                                class="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center mr-4 shadow-lg"
-                                            >
-                                                <svg
-                                                    class="w-6 h-6 text-white"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"
-                                                    ></path>
-                                                </svg>
-                                            </div>
-                                            Mobile Banking
-                                        </h4>
-                                        <div class="space-y-6">
-                                            <div>
-                                                <label
-                                                    class="block text-lg font-semibold text-gray-700 mb-3"
-                                                >
-                                                    Select Bank
-                                                </label>
-                                                <select
-                                                    v-model="
-                                                        mobileBankingData.bank
-                                                    "
-                                                    class="w-full px-6 py-4 border-2 border-gray-300 rounded-2xl focus:ring-4 focus:ring-orange-200 focus:border-orange-500 transition-all duration-200 text-lg"
-                                                    :disabled="processing"
-                                                >
-                                                    <option value="">
-                                                        Select your bank
-                                                    </option>
-                                                    <option value="rocket">
-                                                        DBBL Rocket
-                                                    </option>
-                                                    <option value="mcash">
-                                                        MCash
-                                                    </option>
-                                                    <option value="upay">
-                                                        Upay
-                                                    </option>
-                                                    <option value="tap">
-                                                        Tap
-                                                    </option>
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <label
-                                                    class="block text-lg font-semibold text-gray-700 mb-3"
-                                                >
-                                                    Mobile Number
-                                                </label>
-                                                <input
-                                                    v-model="
-                                                        mobileBankingData.mobileNumber
-                                                    "
-                                                    type="text"
-                                                    placeholder="01XXXXXXXXX"
-                                                    class="w-full px-6 py-4 border-2 border-gray-300 rounded-2xl focus:ring-4 focus:ring-orange-200 focus:border-orange-500 transition-all duration-200 text-lg"
-                                                    :disabled="processing"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label
-                                                    class="block text-lg font-semibold text-gray-700 mb-3"
-                                                >
-                                                    Transaction ID
-                                                </label>
-                                                <input
-                                                    v-model="
-                                                        mobileBankingData.transactionId
-                                                    "
-                                                    type="text"
-                                                    placeholder="Enter transaction ID"
-                                                    class="w-full px-6 py-4 border-2 border-gray-300 rounded-2xl focus:ring-4 focus:ring-orange-200 focus:border-orange-500 transition-all duration-200 text-lg"
-                                                    :disabled="processing"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
                                 </div>
 
                                 <!-- Mega Pay Button -->
@@ -1237,6 +1155,8 @@ const isFormValid = computed(() => {
                 mobileBankingData.value.mobileNumber &&
                 mobileBankingData.value.transactionId
             );
+        case "cod": // ADD THIS LINE
+            return true; // COD doesn't need form validation
         default:
             return false;
     }
@@ -1382,11 +1302,10 @@ const processStripePayment = () => {
                 );
             }
         })
-        .then(() => {
-            console.log("🎉 Payment successful! Redirecting...");
+        .then((data) => {
+            console.log("🎉 Payment successful! Data:", data);
             processing.value = false;
-
-            window.location.href = route("payment.success");
+            // Don't redirect here - let updateOrderStatus handle it
         })
         .catch((error) => {
             console.error("💥 Stripe payment error:", error);
@@ -1412,22 +1331,39 @@ const updateOrderStatus = (paymentIntentId) => {
     })
         .then((response) => {
             if (!response.ok) {
-                throw new Error("Failed to update order status");
+                return response.text().then((errorText) => {
+                    throw new Error(
+                        `Server error: ${response.status} - ${errorText}`
+                    );
+                });
             }
-            console.log("✅ Order updated successfully");
             return response.json();
         })
         .then((data) => {
-            console.log("✅ Order updated successfully", data);
-            if (data.redirect_url) {
-                window.location.href = data.redirect_url;
-            } else {
+            console.log("✅ Order update response:", data);
+
+            if (data.success) {
+                // Show success message with email status
+                // if (data.email_sent) {
+                //     alert(
+                //         "✅ Payment successful! Confirmation email has been sent to your email address."
+                //     );
+                // } else {
+                //     alert(
+                //         "✅ Payment successful! However, we could not send the confirmation email."
+                //     );
+                // }
+
+                // Redirect to success page
                 window.location.href = route("payment.success");
+            } else {
+                throw new Error(data.error || "Order update failed");
             }
             return data;
         })
         .catch((error) => {
             console.error("Update order error:", error);
+            alert("❌ Error: " + error.message);
             throw error;
         });
 };
@@ -1456,39 +1392,53 @@ const proceedToPayment = () => {
 const processOtherPayment = () => {
     processing.value = true;
 
-    router.post(
-        route("payment.process.other"),
-        {
+    if (selectedMethod.value === "cod") {
+        // Use the new COD route
+        router.post(
+            route("payment.cod"),
+            {
+                order_id: props.order.id,
+            },
+            {
+                onSuccess: () => {
+                    processing.value = false;
+                    // window.location.href = route("payment.order");
+                },
+                onError: (errors) => {
+                    processing.value = false;
+                    paymentError.value =
+                        errors.message ||
+                        "COD order processing failed. Please try again.";
+                },
+            }
+        );
+    } else {
+        // Existing code for bKash and Nagad
+        const paymentData = {
             order_id: props.order.id,
             payment_method: selectedMethod.value,
-            mobile_number:
-                selectedMethod.value === "bkash"
-                    ? bkashData.value.mobileNumber
-                    : selectedMethod.value === "nagad"
-                    ? nagadData.value.mobileNumber
-                    : mobileBankingData.value.mobileNumber,
-            transaction_id:
-                selectedMethod.value === "bkash"
-                    ? bkashData.value.transactionId
-                    : selectedMethod.value === "nagad"
-                    ? nagadData.value.transactionId
-                    : mobileBankingData.value.transactionId,
-            ...(selectedMethod.value === "mobile" && {
-                bank: mobileBankingData.value.bank,
-            }),
-        },
-        {
+        };
+
+        if (selectedMethod.value === "bkash") {
+            paymentData.mobile_number = bkashData.value.mobileNumber;
+            paymentData.transaction_id = bkashData.value.transactionId;
+        } else if (selectedMethod.value === "nagad") {
+            paymentData.mobile_number = nagadData.value.mobileNumber;
+            paymentData.transaction_id = nagadData.value.transactionId;
+        }
+
+        router.post(route("payment.process.other"), paymentData, {
             onSuccess: () => {
                 processing.value = false;
-                window.location.href = route("payment.success");
+                window.location.href = route("payment.order");
             },
             onError: (errors) => {
                 processing.value = false;
                 paymentError.value =
                     errors.message || "Payment failed. Please try again.";
             },
-        }
-    );
+        });
+    }
 };
 
 // Watchers and lifecycle

@@ -10,7 +10,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class PaymentSuccessMail extends Mailable  // Remove: implements ShouldQueue
+class OrderCompletedMail extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -32,7 +32,7 @@ class PaymentSuccessMail extends Mailable  // Remove: implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Payment Successful - Order #' . $this->order->id . ' - ' . config('app.name'),
+            subject: "Your Order #{$this->order->order_number} Has Been Completed!",
         );
     }
 
@@ -42,7 +42,7 @@ class PaymentSuccessMail extends Mailable  // Remove: implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            view: 'emails.payment-success',
+            view: 'emails.orders.completed',
             with: [
                 'order' => $this->order,
                 'user' => $this->user,

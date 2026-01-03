@@ -15,12 +15,13 @@ import { Link } from "@inertiajs/vue3";
                     preserve-scroll
                 >
                     <div class="relative">
+                        <!-- Compact navbar logo -->
                         <img
                             :src="'/images/logo.png'"
                             alt="Pustok - Book Store Logo"
-                            class="h-24 w-24 mx-auto rounded-2xl shadow-lg border-4 border-white transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-2xl"
-                            width="96"
-                            height="96"
+                            class="h-24 w-24 md:h-12 md:w-12 object-cover rounded-xl shadow-sm border-2 border-white/30 hover:scale-105 hover:rotate-1 hover:shadow-md transition-all duration-200"
+                            width="48"
+                            height="48"
                             loading="eager"
                         />
                         <!-- Subtle glow effect -->
@@ -34,7 +35,7 @@ import { Link } from "@inertiajs/vue3";
                     <h1
                         class="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent"
                     >
-                        Pustok
+                        Pustok.com
                     </h1>
                     <p class="text-gray-600 text-lg font-medium">
                         Your Ultimate Book Management Solution

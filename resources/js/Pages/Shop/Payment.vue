@@ -176,7 +176,7 @@ const processStripePayment = async () => {
           name: cardName.value,
         },
       },
-      return_url: ${window.location.origin}/payment/success,
+      return_url: `${window.location.origin}/payment/success`,
     });
 
     if (error) {

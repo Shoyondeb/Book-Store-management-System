@@ -254,6 +254,7 @@ class CartController extends Controller
     }
 
     // Modified: Checkout with address
+    // Rename this method from checkout() to processCheckout() 
     public function checkout(Request $request)
     {
         $request->validate([
@@ -315,5 +316,25 @@ class CartController extends Controller
             'order' => $order->load('orderItems.book'),
             'stripeKey' => config('services.stripe.key'),
         ]);
+    }
+    // Add this method in CartController
+    // Add this method too
+    public function showCheckout()
+    {
+        // Check if there's an order in session
+        if (session()->has('order_id')) {
+            $orderId = session()->get('order_id');
+            $order = Order::with('orderItems.book')->find($orderId);
+
+            if ($order) {
+                return Inertia::render('Shop/Checkout', [
+                    'order' => $order,
+                    'stripeKey' => config('services.stripe.key'),
+                ]);
+            }
+        }
+
+        // If no order, redirect to cart
+        return redirect()->route('cart.index')->with('error', 'Please proceed from cart to checkout.');
     }
 }

@@ -155,7 +155,6 @@ class StripeController extends Controller
                 return false;
             }
 
-            // Check email
             if (!$user->email || !filter_var($user->email, FILTER_VALIDATE_EMAIL)) {
                 Log::error('Invalid or empty email', [
                     'order_id' => $order->id,
@@ -165,17 +164,24 @@ class StripeController extends Controller
                 return false;
             }
 
-            Log::info('Sending payment confirmation email', [
+            Log::info('📧 Sending payment confirmation email', [
                 'order_id' => $order->id,
                 'to_email' => $user->email,
                 'user_name' => $user->name,
                 'order_total' => $order->total_amount
             ]);
 
-            // Send email
+            // Option A: Send immediately (bypass queue)
             Mail::to($user->email)->send(new PaymentSuccessMail($order, $user));
 
-            Log::info('Payment confirmation email sent successfully', [
+            // Option B: If you want to keep queue but check if it works
+            // Mail::to($user->email)->queue(new PaymentSuccessMail($order, $user));
+
+            // For immediate sending during testing, you can also do:
+            // $mail = new PaymentSuccessMail($order, $user);
+            // Mail::send($mail->build());
+
+            Log::info('✅ Payment confirmation email sent successfully', [
                 'order_id' => $order->id,
                 'user_id' => $user->id,
                 'email' => $user->email
@@ -183,12 +189,12 @@ class StripeController extends Controller
 
             return true;
         } catch (\Exception $e) {
-            Log::error('Failed to send payment success email: ' . $e->getMessage(), [
+            Log::error('❌ Failed to send payment success email: ' . $e->getMessage(), [
                 'order_id' => $order->id,
-                'error_message' => $e->getMessage()
+                'error_message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
 
-            // Don't throw the error - email failure shouldn't break the payment flow
             return false;
         }
     }

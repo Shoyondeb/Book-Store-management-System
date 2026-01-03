@@ -12,9 +12,9 @@
                     >
                         <!-- Logo Image -->
                         <img
-                            src="/images/logo.png"
+                            src="/images/logo2.png"
                             alt="Pustok Logo"
-                            class="h-10 w-10 md:h-12 md:w-12 object-contain"
+                            class="h-16 w-16 md:h-18 md:w-18 object-cover rounded-full bord border-gray-300"
                         />
 
                         <!-- Pustok Text -->
@@ -22,7 +22,7 @@
                             <span
                                 class="text-2xl font-bold text-blue-600 leading-tight"
                             >
-                                PUSTOK
+                                PUSTOK.com
                             </span>
                             <span
                                 class="text-xs text-gray-500 font-medium -mt-1"

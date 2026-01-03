@@ -1109,16 +1109,15 @@ const proceedToCheckout = () => {
         return;
     }
 
+    // Use the POST route
     router.post(
-        route("cart.checkout"),
+        route("cart.checkout.post"), // Changed to .post
         {
             shipping_address_id: selectedAddress.value.id,
         },
         {
             onError: (errors) => {
-                alert(
-                    errors.message || "Failed to checkout. Please try again."
-                );
+                alert(errors.message || "Failed to checkout.");
             },
         }
     );

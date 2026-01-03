@@ -186,7 +186,7 @@
                     <h1
                         class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 mb-4 tracking-tight"
                     >
-                        📚 Explore Books
+                        Explore Books
                     </h1>
                     <p class="text-gray-600 text-lg">
                         Discover your next favorite read
@@ -201,7 +201,7 @@
                             <input
                                 v-model="form.search"
                                 type="text"
-                                placeholder="Search books, authors, or topics..."
+                                placeholder="Search books, authors, titles..."
                                 class="w-full pl-14 pr-32 py-4 border-2 border-gray-300 rounded-2xl shadow-lg hover:shadow-xl focus:shadow-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-200 focus:ring-opacity-50 text-lg transition-all duration-200"
                                 @input="onDesktopSearchInput"
                             />
@@ -760,6 +760,7 @@ import FilterPill from "@/Components/FilterPill.vue";
 
 const props = defineProps({
     books: Object,
+    allBooks: Array, // Add this
     categories: Array,
     authors: Array,
     filters: Object,
@@ -797,7 +798,8 @@ const activeFilterCount = computed(() => {
 const categoriesWithBooks = computed(() => {
     return props.categories
         .map((category) => {
-            const categoryBooks = props.books.data.filter(
+            const categoryBooks = props.allBooks.filter(
+                // ✅ Use allBooks instead of books.data
                 (book) => book.category_id === category.id
             );
             return {

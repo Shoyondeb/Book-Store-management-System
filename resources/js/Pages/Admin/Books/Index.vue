@@ -444,6 +444,8 @@
                                 </div>
                             </div>
 
+                            <!-- In the form section of the modal, add this field -->
+
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label
@@ -478,6 +480,22 @@
                                             {{ author.name }}
                                         </option>
                                     </select>
+                                </div>
+                            </div>
+
+                            <!-- Add this new grid row for publisher -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label
+                                        class="block text-sm font-medium text-gray-700 mb-2"
+                                        >Publisher</label
+                                    >
+                                    <input
+                                        v-model="form.publisher"
+                                        type="text"
+                                        class="w-full border border-gray-300 rounded-xl shadow-sm p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                        placeholder="Enter publisher name"
+                                    />
                                 </div>
                             </div>
 
@@ -741,6 +759,7 @@ const form = useForm({
     title: "",
     author_id: "",
     description: "",
+    publisher: "",
     price: "",
     stock: "",
     category_id: "",
@@ -817,6 +836,7 @@ const submitForm = () => {
         formData.append("_method", "PUT");
         formData.append("title", form.title);
         formData.append("author_id", form.author_id);
+        formData.append("publisher", form.publisher || "");
         formData.append("description", form.description || "");
         formData.append("price", form.price);
         formData.append("stock", form.stock);
@@ -845,6 +865,7 @@ const editBook = (book) => {
     form.title = book.title;
     form.author_id = book.author_id;
     form.description = book.description;
+    form.publisher = book.publisher || "";
     form.price = book.price;
     form.stock = book.stock;
     form.category_id = book.category_id;

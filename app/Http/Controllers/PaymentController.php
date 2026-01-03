@@ -2,18 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use Stripe\Stripe;
+use App\Models\Book;
+use App\Models\User;
 use Inertia\Inertia;
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Models\Book;
-use App\Models\User;
+use Stripe\PaymentIntent;
+use Illuminate\Http\Request;
+use App\Mail\PaymentSuccessMail;
+use App\Mail\CODConfirmationMail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\PaymentSuccessMail;
-use Stripe\Stripe;
-use Stripe\PaymentIntent;
 use Stripe\Exception\ApiErrorException;
 
 class PaymentController extends Controller
@@ -216,7 +217,7 @@ class PaymentController extends Controller
 
                 // Check if order already completed
                 if ($order->status === 'completed') {
-                    return redirect()->route('payment.success')->with('error', 'This order has already been completed.');
+                    return redirect()->route('payment.order')->with('error', 'This order has already been completed.');
                 }
 
                 // Check stock availability
@@ -252,7 +253,6 @@ class PaymentController extends Controller
                     ]);
                 }
 
-
                 // Clear cart session
                 session()->forget('cart');
 
@@ -263,7 +263,7 @@ class PaymentController extends Controller
                     'amount' => $order->total_amount
                 ]);
 
-                return redirect()->route('payment.success')->with('success', 'Payment processed successfully!');
+                return redirect()->route('payment.order')->with('success', 'Payment processed successfully!');
             } catch (\Exception $e) {
                 Log::error('Other payment processing failed: ' . $e->getMessage());
                 DB::rollBack();
@@ -501,21 +501,135 @@ class PaymentController extends Controller
         ]);
     }
 
-    // SSLCommerz Payment Initiation
-    private function initiateSSLCommerzPayment($order, $paymentMethod)
+    // In PaymentController.php - Add this method
+    public function processCOD(Request $request)
     {
-        Log::info("Initiating SSLCommerz payment", [
-            'order_id' => $order->id,
-            'method' => $paymentMethod,
-            'amount' => $order->total_amount
+        $request->validate([
+            'order_id' => 'required|exists:orders,id',
         ]);
 
-        return response()->json([
-            'success' => true,
-            'payment_url' => '#', // Replace with actual SSLCommerz URL
-            'method' => $paymentMethod,
-            'message' => 'Redirect to payment gateway'
-        ]);
+        return DB::transaction(function () use ($request) {
+            try {
+                $order = Order::with(['orderItems.book', 'user'])->findOrFail($request->order_id);
+
+                // Check if order already completed
+                if ($order->status === 'completed') {
+                    return redirect()->route('payment.order')->with('error', 'This order has already been completed.');
+                }
+
+                // Check stock availability
+                foreach ($order->orderItems as $item) {
+                    if ($item->book->stock < $item->quantity) {
+                        return redirect()->back()->with('error', "Insufficient stock for {$item->book->title}. Available: {$item->book->stock}, Requested: {$item->quantity}");
+                    }
+                }
+
+                // Update order status for COD
+                $order->update([
+                    'status' => 'COD', // Order is pending until delivered
+                    'payment_method' => 'cod',
+                    'payment_status' => 'pending', // Payment pending until delivery
+                    'transaction_id' => 'COD-' . $order->id . '-' . time(),
+                    'payment_details' => json_encode([
+                        'payment_type' => 'cash_on_delivery',
+                        'order_placed_at' => now()->toDateTimeString(),
+                        'expected_delivery' => now()->addDays(3)->toDateTimeString(),
+                    ])
+                ]);
+
+                // Update book stock
+                foreach ($order->orderItems as $item) {
+                    $book = $item->book;
+                    $oldStock = $book->stock;
+                    $book->decrement('stock', $item->quantity);
+                    $newStock = $book->fresh()->stock;
+
+                    Log::info("📚 Stock updated for book (COD): {$book->title}", [
+                        'book_id' => $book->id,
+                        'quantity_sold' => $item->quantity,
+                        'old_stock' => $oldStock,
+                        'new_stock' => $newStock,
+                        'order_id' => $order->id,
+                        'payment_method' => 'cod'
+                    ]);
+                }
+
+                // Send COD confirmation email
+                $this->sendCODConfirmationEmail($order);
+
+                // Clear cart session
+                session()->forget('cart');
+
+                Log::info("✅ COD order placed successfully", [
+                    'order_id' => $order->id,
+                    'amount' => $order->total_amount,
+                    'cart_cleared' => !session()->has('cart')
+                ]);
+
+                return redirect()->route('payment.order')->with('success', 'Cash on Delivery order placed successfully! You will pay when you receive the books.');
+            } catch (\Exception $e) {
+                Log::error('❌ COD processing failed: ' . $e->getMessage());
+                DB::rollBack();
+
+                return redirect()->back()->with('error', 'COD order processing failed: ' . $e->getMessage());
+            }
+        });
+    }
+
+    // Add this new email sending method
+    private function sendCODConfirmationEmail(Order $order)
+    {
+        try {
+            // Load user relationship if not already loaded
+            if (!$order->relationLoaded('user')) {
+                $order->load(['user', 'orderItems.book']);
+            }
+
+            $user = $order->user;
+
+            if (!$user) {
+                Log::error('User not found for COD order', [
+                    'order_id' => $order->id,
+                    'order_user_id' => $order->user_id
+                ]);
+                return false;
+            }
+
+            // Check email
+            if (!$user->email || !filter_var($user->email, FILTER_VALIDATE_EMAIL)) {
+                Log::error('Invalid or empty email for COD', [
+                    'order_id' => $order->id,
+                    'user_id' => $user->id,
+                    'email' => $user->email
+                ]);
+                return false;
+            }
+
+            Log::info('Sending COD confirmation email', [
+                'order_id' => $order->id,
+                'to_email' => $user->email,
+                'user_name' => $user->name,
+                'order_total' => $order->total_amount
+            ]);
+
+            // Send COD specific email
+            Mail::to($user->email)->send(new CODConfirmationMail($order, $user));
+
+            Log::info('COD confirmation email sent successfully', [
+                'order_id' => $order->id,
+                'user_id' => $user->id,
+                'email' => $user->email
+            ]);
+
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Failed to send COD confirmation email: ' . $e->getMessage(), [
+                'order_id' => $order->id,
+                'error_message' => $e->getMessage()
+            ]);
+
+            return false;
+        }
     }
 
     // Handle SSLCommerz Webhook
@@ -528,6 +642,15 @@ class PaymentController extends Controller
     public function success()
     {
         return Inertia::render('Shop/PaymentSuccess', [
+            'flash' => [
+                'success' => session('success'),
+                'error' => session('error')
+            ]
+        ]);
+    }
+    public function orderSuccess()
+    {
+        return Inertia::render('Shop/successOrder', [
             'flash' => [
                 'success' => session('success'),
                 'error' => session('error')

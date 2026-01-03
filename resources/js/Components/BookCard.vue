@@ -9,6 +9,7 @@ const props = defineProps({
 // State management
 const isAddingToCart = ref(false);
 const isInCart = ref(false);
+const isHovering = ref(false);
 const page = usePage();
 
 // Initialize cart status
@@ -30,7 +31,6 @@ const addToCart = async () => {
     isAddingToCart.value = true;
 
     try {
-        // OPTION 1: Use axios with explicit headers (MOST RELIABLE)
         const response = await window.axios.post(
             route("cart.add", props.book.id),
             {
@@ -40,11 +40,8 @@ const addToCart = async () => {
 
         if (response.data.success) {
             isInCart.value = true;
-
-            // Show notification
             showNotification("✓ Added to cart successfully!", "success");
 
-            // Update cart count via event
             window.dispatchEvent(
                 new CustomEvent("cart-count-updated", {
                     detail: { count: response.data.cartCount },
@@ -53,11 +50,8 @@ const addToCart = async () => {
         }
     } catch (error) {
         console.error("Cart error:", error);
-        console.log("Error status:", error.response?.status);
-        console.log("Error data:", error.response?.data);
 
         if (error.response?.status === 419) {
-            // CSRF token mismatch - refresh page to get new token
             showNotification("Please refresh the page and try again.", "error");
             setTimeout(() => {
                 window.location.reload();
@@ -72,43 +66,21 @@ const addToCart = async () => {
     }
 };
 
-// Update global cart count
-const updateGlobalCartCount = (count) => {
-    // Update localStorage
-    localStorage.setItem("cart_count", count);
-
-    // Dispatch event for navbar
-    window.dispatchEvent(
-        new CustomEvent("cart-count-updated", {
-            detail: { count },
-        })
-    );
-};
-
-// Button classes
-const getButtonClasses = () => {
+// Button classes for hover overlay
+const getHoverButtonClasses = () => {
     if (props.book.stock === 0) {
-        return "bg-gray-300 text-gray-700 cursor-not-allowed";
+        return "bg-gray-300/90 text-gray-700 cursor-not-allowed";
     } else if (isInCart.value) {
-        return "bg-green-100 text-green-700 border-2 border-green-200 hover:bg-green-200 cursor-default";
+        return "bg-green-100/90 text-green-700 border-2 border-green-200 cursor-default";
     } else if (isAddingToCart.value) {
-        return "bg-blue-400 text-white cursor-wait";
+        return "bg-blue-400/90 text-white cursor-wait";
     } else {
-        return "bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 hover:shadow-md";
+        return "bg-gradient-to-r from-blue-500/90 to-blue-600/90 backdrop-blur-sm text-white hover:from-blue-600 hover:to-blue-700";
     }
 };
 
-// Button text
-const buttonText = computed(() => {
-    if (isAddingToCart.value) return "Adding...";
-    if (isInCart.value) return "✓ Added to Cart";
-    if (props.book.stock === 0) return "Out of Stock";
-    return "Add to Cart";
-});
-
 // Notification function
 const showNotification = (message, type = "success") => {
-    // Create notification element
     const notification = document.createElement("div");
     notification.className = `fixed top-4 right-4 px-4 py-3 rounded-lg shadow-lg z-50 transform transition-all duration-300 ${
         type === "success"
@@ -122,10 +94,8 @@ const showNotification = (message, type = "success") => {
 
     document.body.appendChild(notification);
 
-    // Animate in
     setTimeout(() => (notification.style.transform = "translateX(0)"), 10);
 
-    // Remove after 3 seconds
     setTimeout(() => {
         notification.style.transform = "translateX(100%)";
         setTimeout(() => document.body.removeChild(notification), 300);
@@ -181,14 +151,14 @@ const handleImageError = (event) => {
 
 <template>
     <div
-        class="group bg-white rounded-xl sm:rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100"
+        class="group relative bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100"
+        @mouseenter="isHovering = true"
+        @mouseleave="isHovering = false"
     >
-        <!-- Book Image with Badges -->
+        <!-- Book Image Container with Hover Overlay -->
         <div class="relative overflow-hidden bg-gray-100">
-            <Link
-                :href="route('shop.books.show', book.id)"
-                class="block aspect-[3/4]"
-            >
+            <div class="block aspect-[3/4] relative">
+                <!-- Book Image -->
                 <img
                     :src="book.image_url || '/images/default-book.jpg'"
                     :alt="book.title"
@@ -196,118 +166,190 @@ const handleImageError = (event) => {
                     @error="handleImageError"
                 />
 
-                <!-- Image Overlay -->
+                <!-- Hover Overlay with Add to Cart Button -->
                 <div
-                    class="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                ></div>
-            </Link>
-
-            <!-- Stock Badge -->
-            <div class="absolute top-2 left-2">
-                <span
-                    class="inline-flex items-center px-2 py-1 rounded-full text-[10px] sm:text-xs font-semibold shadow-md"
-                    :class="getStockBadgeClasses()"
+                    class="absolute inset-0 bg-black/40 transition-all duration-300 flex items-center justify-center"
+                    :class="isHovering ? 'opacity-100' : 'opacity-0'"
                 >
-                    <svg
-                        class="w-3 h-3 mr-1"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                    <button
+                        @click.stop="addToCart"
+                        :disabled="
+                            book.stock === 0 || isInCart || isAddingToCart
+                        "
+                        class="px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-60 w-3/4 max-w-xs flex items-center justify-center gap-2 shadow-lg"
+                        :class="getHoverButtonClasses()"
                     >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
-                        />
-                    </svg>
-                    {{ book.stock > 0 ? book.stock : "0" }}
-                </span>
-            </div>
+                        <span
+                            v-if="isAddingToCart"
+                            class="flex items-center gap-2"
+                        >
+                            <svg
+                                class="w-4 h-4 animate-spin"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <circle
+                                    class="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    stroke-width="4"
+                                ></circle>
+                                <path
+                                    class="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                ></path>
+                            </svg>
+                            Adding...
+                        </span>
+                        <span
+                            v-else-if="isInCart"
+                            class="flex items-center gap-2"
+                        >
+                            <svg
+                                class="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M5 13l4 4L19 7"
+                                />
+                            </svg>
+                            ✓ Added
+                        </span>
+                        <span
+                            v-else-if="book.stock === 0"
+                            class="flex items-center gap-2"
+                        >
+                            <svg
+                                class="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12"
+                                />
+                            </svg>
+                            Out of Stock
+                        </span>
+                        <span v-else class="flex items-center gap-2">
+                            <svg
+                                class="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                                />
+                            </svg>
+                            Add to Cart
+                        </span>
+                    </button>
+                </div>
 
-            <!-- Discount Badge -->
-            <div v-if="hasDiscount()" class="absolute top-2 right-2">
-                <span
-                    class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-bold bg-red-500 text-white shadow-md"
-                >
-                    -{{ calculateDiscount() }}%
-                </span>
-            </div>
+                <!-- Stock Badge -->
+                <div class="absolute top-2 left-2">
+                    <span
+                        class="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-semibold shadow-md"
+                        :class="getStockBadgeClasses()"
+                    >
+                        <svg
+                            class="w-3 h-3 mr-1"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
+                            />
+                        </svg>
+                        {{ book.stock > 0 ? book.stock : "0" }}
+                    </span>
+                </div>
 
-            <!-- Quick View Button -->
-            <button
-                @click="$inertia.visit(route('shop.books.show', book.id))"
-                class="absolute bottom-2 right-2 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-md hover:bg-white hover:scale-110 transition-all duration-300 opacity-0 group-hover:opacity-100 hidden sm:flex items-center justify-center"
-            >
-                <svg
-                    class="w-4 h-4 text-gray-700"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                    />
-                </svg>
-            </button>
+                <!-- Discount Badge -->
+                <div v-if="hasDiscount()" class="absolute top-2 right-2">
+                    <span
+                        class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-bold bg-red-500 text-white shadow-md"
+                    >
+                        -{{ calculateDiscount() }}%
+                    </span>
+                </div>
+            </div>
         </div>
 
-        <!-- Book Content -->
-        <div class="p-3 sm:p-4">
-            <!-- Category -->
-            <div class="mb-2">
-                <span
-                    class="inline-block px-2 py-1 bg-gray-100 rounded-md text-xs text-gray-600 font-medium"
-                >
-                    {{ book.category?.name || "Uncategorized" }}
-                </span>
-            </div>
-
+        <!-- Book Content (Minimized) -->
+        <div class="p-3">
             <!-- Title -->
-            <Link :href="route('shop.books.show', book.id)" class="block mb-2">
+            <Link :href="route('shop.books.show', book.id)" class="block mb-1">
                 <h3
-                    class="font-bold text-gray-900 hover:text-blue-600 transition-colors duration-200 leading-tight text-sm sm:text-base"
+                    class="font-semibold text-gray-900 hover:text-blue-600 transition-colors duration-200 text-sm line-clamp-2 h-10"
                 >
-                    {{
-                        book.title.length > 30
-                            ? book.title.substring(0, 30) + "..."
-                            : book.title
-                    }}
+                    {{ book.title }}
                 </h3>
             </Link>
 
             <!-- Author -->
-            <div class="mb-3">
-                <p class="text-xs sm:text-sm text-gray-600 truncate">
-                    by
+            <div class="mb-1">
+                <p class="text-xs text-gray-600 truncate">
+                    <span class="font-medium">By:</span>
                     <Link
                         v-if="book.author"
                         :href="route('authors.show', book.author.id)"
-                        class="text-blue-600 hover:text-blue-800 hover:underline"
+                        class="text-blue-600 hover:text-blue-800 hover:underline ml-1"
                     >
-                        {{ book.author.name }}
+                        {{
+                            book.author.name.length > 30
+                                ? book.author.name.substring(0, 30) + "..."
+                                : book.author.name
+                        }}
                     </Link>
-                    <span v-else class="text-gray-500">Unknown Author</span>
+                    <span v-else class="text-gray-500 ml-1"
+                        >Unknown Author</span
+                    >
+                </p>
+            </div>
+
+            <!-- Publisher -->
+            <div v-if="book.publisher" class="mb-1">
+                <p class="text-xs text-gray-600 truncate">
+                    <span class="font-medium">Publisher:</span>
+                    <span class="text-gray-700 ml-1">
+                        {{
+                            book.publisher.length > 18
+                                ? book.publisher.substring(0, 18) + "..."
+                                : book.publisher
+                        }}
+                    </span>
                 </p>
             </div>
 
             <!-- Rating -->
-            <div class="flex items-center mb-3">
-                <div class="flex items-center">
-                    <div class="flex mr-2">
+            <div class="flex items-center mb-2">
+                <div class="flex items-center mr-2">
+                    <div class="flex mr-1">
                         <svg
                             v-for="i in 5"
                             :key="i"
-                            class="w-3 h-3 sm:w-4 sm:h-4"
+                            class="w-3 h-3"
                             :class="
                                 i <= Math.floor(getRating())
                                     ? 'text-yellow-400'
@@ -321,11 +363,11 @@ const handleImageError = (event) => {
                             />
                         </svg>
                     </div>
-                    <span class="text-xs sm:text-sm font-medium text-gray-900">
+                    <span class="text-xs font-medium text-gray-900 ml-1">
                         {{ formatRating() }}
                     </span>
                 </div>
-                <span class="mx-2 text-gray-300">•</span>
+                <span class="text-gray-300 text-xs mx-1">•</span>
                 <span class="text-xs text-gray-500">
                     {{ book.rating_count || 0 }} review{{
                         book.rating_count !== 1 ? "s" : ""
@@ -334,123 +376,48 @@ const handleImageError = (event) => {
             </div>
 
             <!-- Price -->
-            <div class="mb-4">
-                <div class="flex items-center gap-2">
-                    <span class="text-lg sm:text-xl font-bold text-blue-600">
+            <div
+                class="flex items-center justify-between mt-2 pt-2 border-t border-gray-100"
+            >
+                <div>
+                    <span class="text-sm font-bold text-blue-600">
                         ৳{{ book.price }}
                     </span>
                     <span
                         v-if="hasDiscount()"
-                        class="text-sm text-gray-500 line-through"
+                        class="text-xs text-gray-500 line-through ml-1"
                     >
                         ৳{{ book.original_price }}
                     </span>
                 </div>
+
+                <!-- Quick View Button (Small) -->
+                <Link
+                    :href="route('shop.books.show', book.id)"
+                    class="text-xs text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 px-2 py-1 rounded-md hover:bg-blue-50 transition-colors"
+                >
+                    <svg
+                        class="w-3 h-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                        />
+                    </svg>
+                    View
+                </Link>
             </div>
-
-            <!-- Add to Cart Button -->
-            <button
-                @click="addToCart"
-                :disabled="book.stock === 0 || isInCart || isAddingToCart"
-                class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg sm:rounded-xl transition-all duration-300 font-semibold shadow-sm hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
-                :class="getButtonClasses()"
-            >
-                <span v-if="isAddingToCart" class="flex items-center gap-2">
-                    <svg
-                        class="w-4 h-4 sm:w-5 sm:h-5 animate-spin"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <circle
-                            class="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            stroke-width="4"
-                        ></circle>
-                        <path
-                            class="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                    </svg>
-                    Adding...
-                </span>
-                <span v-else-if="isInCart" class="flex items-center gap-2">
-                    <svg
-                        class="w-4 h-4 sm:w-5 sm:h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M5 13l4 4L19 7"
-                        />
-                    </svg>
-                    ✓ Added to Cart
-                </span>
-                <span
-                    v-else-if="book.stock === 0"
-                    class="flex items-center gap-2"
-                >
-                    <svg
-                        class="w-4 h-4 sm:w-5 sm:h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M6 18L18 6M6 6l12 12"
-                        />
-                    </svg>
-                    Out of Stock
-                </span>
-                <span v-else class="flex items-center gap-2">
-                    <svg
-                        class="w-4 h-4 sm:w-5 sm:h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                        />
-                    </svg>
-                    Add to Cart
-                </span>
-            </button>
-
-            <!-- Wishlist Button -->
-            <button
-                @click="$inertia.post(route('wishlist.add', book.id))"
-                class="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg sm:hidden text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-                <svg
-                    class="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                    />
-                </svg>
-                Add to Wishlist
-            </button>
         </div>
     </div>
 </template>

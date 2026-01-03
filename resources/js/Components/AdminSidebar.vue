@@ -9,11 +9,12 @@
                     <img
                         src="/images/logo.png"
                         alt="PUSTOK Logo"
-                        class="logo-icon"
-                        style="width: 40px; height: 40px; object-fit: contain"
+                        class="rounded-full border-2 border-gray-300"
+                        style="width: 75px; height: 75px; object-fit: cover"
                     />
+
                     <div class="logo-text">
-                        <h2>PUSTOK</h2>
+                        <h2>PUSTOK.com</h2>
                         <p>Admin Panel</p>
                     </div>
                 </div>

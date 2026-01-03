@@ -14,6 +14,7 @@ class Book extends Model
         'title',
         'author_id',  // Use author_id instead of author
         'description',
+        'publisher',
         'price',
         'stock',
         'image',

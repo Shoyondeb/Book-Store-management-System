@@ -12,7 +12,7 @@
                 <div class="mb-6 text-center">
                     <div class="text-green-500 text-6xl mb-4">✅</div>
                     <h2 class="text-xl font-semibold text-green-600 mb-2">
-                        Payment Successful!
+                        Payment Successfully!
                     </h2>
                     <p class="text-gray-600">
                         Your order has been confirmed. Order number:

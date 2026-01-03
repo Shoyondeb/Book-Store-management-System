@@ -3,14 +3,16 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
+use Inertia\Inertia;
 use App\Models\Order;
 use Illuminate\Http\Request;
+use App\Mail\OrderShippedMail;
+use App\Mail\OrderCompletedMail;
+use App\Mail\PaymentSuccessMail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\PaymentSuccessMail;
-use Inertia\Inertia;
 
 class OrderController extends Controller
 {
@@ -52,31 +54,56 @@ class OrderController extends Controller
     public function updateStatus(Request $request, Order $order)
     {
         $request->validate([
-            'status' => 'required|in:pending,payment_submitted,payment_verification,paid,processing,shipped,ready_for_pickup,completed,cancelled,payment_failed'
+            'status' => 'required|in:pending,payment_submitted,payment_verification,paid,processing,shipped,ready_for_pickup,completed,cancelled,payment_failed,cod'
         ]);
 
         try {
             $oldStatus = $order->status;
             $newStatus = $request->status;
 
+            Log::info('📧 DEBUG: Order status update attempt', [
+                'order_id' => $order->id,
+                'old_status' => $oldStatus,
+                'new_status' => $newStatus,
+                'user_id' => $order->user_id
+            ]);
+
             $order->update([
                 'status' => $newStatus
             ]);
 
-            // // Send email when status is changed to 'paid'
-            // if ($newStatus === 'paid' && $oldStatus !== 'paid') {
-            //     $this->sendPaymentSuccessEmail($order);
+            // Send emails based on status changes
+            if ($oldStatus !== $newStatus) {
+                Log::info('📧 DEBUG: Status changed, checking email triggers', [
+                    'order_id' => $order->id,
+                    'old' => $oldStatus,
+                    'new' => $newStatus
+                ]);
 
-            //     Log::info('Order status changed to paid - email sent', [
-            //         'order_id' => $order->id,
-            //         'old_status' => $oldStatus,
-            //         'new_status' => $newStatus,
-            //         'admin_id' => auth()->id()
-            //     ]);
+                // Send email only for ready_for_pickup
+                if ($newStatus === 'ready_for_pickup' && $oldStatus !== 'ready_for_pickup') {
+                    Log::info('📧 DEBUG: Triggering ready_for_pickup email', [
+                        'order_id' => $order->id
+                    ]);
+                    $emailSent = $this->sendReadyForPickupEmail($order);
+                    Log::info('📧 DEBUG: Order ready_for_pickup email result', [
+                        'order_id' => $order->id,
+                        'email_sent' => $emailSent
+                    ]);
+                }
 
-            //     // You could add a session flash message here if needed
-            //     // session()->flash('success', 'Order status updated and confirmation email sent.');
-            // }
+                // Send completion email for completed
+                if ($newStatus === 'completed' && $oldStatus !== 'completed') {
+                    Log::info('📧 DEBUG: Triggering completed email', [
+                        'order_id' => $order->id
+                    ]);
+                    $emailSent = $this->sendOrderCompletedEmail($order);
+                    Log::info('📧 DEBUG: Order completed email result', [
+                        'order_id' => $order->id,
+                        'email_sent' => $emailSent
+                    ]);
+                }
+            }
 
             // Return success (Inertia will handle the redirect/reload)
             return redirect()->back()->with('success', 'Order status updated successfully.');
@@ -87,6 +114,91 @@ class OrderController extends Controller
             ]);
 
             return redirect()->back()->with('error', 'Failed to update order status. Please try again.');
+        }
+    }
+
+    private function sendReadyForPickupEmail(Order $order)
+    {
+        try {
+            $order->load(['user']);
+            $user = $order->user;
+
+            if (!$user || !$user->email || !filter_var($user->email, FILTER_VALIDATE_EMAIL)) {
+                Log::error('📧 Order ready for pickup email: Invalid user or email', [
+                    'order_id' => $order->id,
+                    'user_id' => $user->id ?? null,
+                    'email' => $user->email ?? null
+                ]);
+                return false;
+            }
+
+            // Debug logging
+            Log::info('📧 Sending order ready for pickup email', [
+                'order_id' => $order->id,
+                'to_email' => $user->email,
+                'user_name' => $user->name
+            ]);
+
+            // Send email
+            Mail::to($user->email)->send(new OrderShippedMail($order, $user));
+
+            Log::info('✅ Order ready for pickup email sent successfully', [
+                'order_id' => $order->id,
+                'user_id' => $user->id,
+                'email' => $user->email
+            ]);
+
+            return true;
+        } catch (\Exception $e) {
+            Log::error('❌ Failed to send order ready for pickup email: ' . $e->getMessage(), [
+                'order_id' => $order->id,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Send order completed email
+     */
+    private function sendOrderCompletedEmail(Order $order)
+    {
+        try {
+            $order->load(['user']);
+            $user = $order->user;
+
+            if (!$user || !$user->email || !filter_var($user->email, FILTER_VALIDATE_EMAIL)) {
+                Log::error('📧 Order completed email: Invalid user or email', [
+                    'order_id' => $order->id,
+                    'user_id' => $user->id ?? null,
+                    'email' => $user->email ?? null
+                ]);
+                return false;
+            }
+
+            // Debug logging
+            Log::info('📧 Sending order completed email', [
+                'order_id' => $order->id,
+                'to_email' => $user->email,
+                'user_name' => $user->name
+            ]);
+
+            // Send email - you need to create this Mail class
+            Mail::to($user->email)->send(new OrderCompletedMail($order, $user));
+
+            Log::info('✅ Order completed email sent successfully', [
+                'order_id' => $order->id,
+                'user_id' => $user->id,
+                'email' => $user->email
+            ]);
+
+            return true;
+        } catch (\Exception $e) {
+            Log::error('❌ Failed to send order completed email: ' . $e->getMessage(), [
+                'order_id' => $order->id,
+                'error' => $e->getMessage()
+            ]);
+            return false;
         }
     }
 

@@ -42,27 +42,7 @@
                         </div>
 
                         <!-- Desktop Print Button -->
-                        <div class="hidden md:block">
-                            <button
-                                @click="printAllOrders"
-                                class="group inline-flex items-center gap-3 px-5 sm:px-6 py-3 sm:py-3.5 bg-gradient-to-r from-white to-gray-50 border-2 border-gray-200 text-gray-800 rounded-xl hover:border-blue-500 hover:bg-blue-50 hover:text-blue-700 transition-all duration-300 font-semibold shadow-sm hover:shadow-lg"
-                            >
-                                <svg
-                                    class="w-5 h-5 group-hover:scale-110 transition-transform"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
-                                    />
-                                </svg>
-                                Print Report
-                            </button>
-                        </div>
+                        <div class="hidden md:block"></div>
                     </div>
                 </div>
 
@@ -892,6 +872,49 @@
                                                 :class="
                                                     statusClasses.payment_failed
                                                         .gradient
+                                                "
+                                            ></div>
+                                        </span>
+                                        <!-- Cash on Delivery (COD) Status -->
+                                        <span
+                                            v-else-if="
+                                                order.status === 'COD' ||
+                                                order.status === 'cod'
+                                            "
+                                            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 group relative"
+                                            :class="statusClasses.cod.container"
+                                        >
+                                            <div
+                                                :class="
+                                                    statusClasses.cod.iconBg
+                                                "
+                                                class="p-1.5 rounded-lg group-hover:scale-110 transition-transform"
+                                            >
+                                                <svg
+                                                    class="w-4 h-4"
+                                                    :class="
+                                                        statusClasses.cod.icon
+                                                    "
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                                                    />
+                                                </svg>
+                                            </div>
+                                            <span
+                                                :class="statusClasses.cod.text"
+                                                >Cash on Delivery</span
+                                            >
+                                            <div
+                                                class="absolute inset-0 bg-gradient-to-r opacity-0 group-hover:opacity-10 transition-opacity"
+                                                :class="
+                                                    statusClasses.cod.gradient
                                                 "
                                             ></div>
                                         </span>
@@ -1879,16 +1902,23 @@
                             style="
                                 background: white;
                                 padding: 10px;
-                                border-radius: 8px;
+                                border-radius: 50%;
+                                display: inline-flex;
+                                justify-content: center;
+                                align-items: center;
+                                width: 90px;
+                                height: 90px;
+                                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
                             "
                         >
                             <img
                                 src="/images/logo.png"
                                 alt="PUSTOK Logo"
                                 style="
-                                    width: 70px;
-                                    height: 60px;
-                                    object-fit: contain;
+                                    width: 78px;
+                                    height: 78px;
+                                    object-fit: cover;
+                                    border-radius: 50%;
                                 "
                             />
                         </div>
@@ -1903,7 +1933,7 @@
                                     font-weight: 700;
                                 "
                             >
-                                PUSTOK
+                                PUSTOK.com
                             </h1>
                             <p
                                 style="
@@ -2506,315 +2536,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- All Orders Report -->
-            <div v-if="printType === 'all'" class="report">
-                <!-- Report Header -->
-                <div class="report-header">
-                    <div class="company-info">
-                        <div class="logo">
-                            <!-- Replace emoji with your logo -->
-                            <img
-                                src="/images/logo.png"
-                                alt="PUSTOK Logo"
-                                class="logo-image"
-                                style="
-                                    width: 60px;
-                                    height: 60px;
-                                    object-fit: contain;
-                                "
-                            />
-                        </div>
-                        <div>
-                            <h1>PUSTOK</h1>
-                            <p class="company-details">Order History Report</p>
-                        </div>
-                    </div>
-                    <div class="report-title">
-                        <h2>ORDER HISTORY</h2>
-                        <p class="report-date">
-                            Generated: {{ new Date().toLocaleDateString() }}
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Report Summary -->
-                <div class="report-summary">
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-number">
-                                {{ orders.total || 0 }}
-                            </div>
-                            <div class="stat-label">Total Orders</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number">
-                                ৳{{ getTotalRevenue() }}
-                            </div>
-                            <div class="stat-label">Total Revenue</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number">
-                                {{ getStatusCount("completed") }}
-                            </div>
-                            <div class="stat-label">Completed</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number">
-                                {{ getStatusCount("pending") }}
-                            </div>
-                            <div class="stat-label">Pending</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Orders List -->
-                <div class="orders-section">
-                    <h3>ORDER DETAILS</h3>
-                    <div
-                        v-for="order in orders.data"
-                        :key="order.id"
-                        class="order-card"
-                    >
-                        <div class="order-header">
-                            <div class="order-meta">
-                                <span class="order-number"
-                                    >Order #{{ order.order_number }}</span
-                                >
-                                <span :class="'status status-' + order.status">
-                                    {{ getStatusDisplayName(order.status) }}
-                                </span>
-                            </div>
-                            <div class="order-details">
-                                <span class="date">{{
-                                    formatDate(order.created_at)
-                                }}</span>
-                                <span class="total"
-                                    >৳{{ order.total_amount }}</span
-                                >
-                            </div>
-                        </div>
-
-                        <table
-                            class="order-items"
-                            style="
-                                width: 100%;
-                                border-collapse: collapse;
-                                margin-top: 20px;
-                            "
-                        >
-                            <thead>
-                                <tr style="background-color: #f9fafb">
-                                    <th
-                                        style="
-                                            text-align: left;
-                                            padding: 12px 16px;
-                                            border-bottom: 2px solid #e5e7eb;
-                                            font-weight: 600;
-                                            color: #374151;
-                                        "
-                                    >
-                                        Book Title
-                                    </th>
-                                    <th
-                                        style="
-                                            text-align: center;
-                                            padding: 12px 16px;
-                                            border-bottom: 2px solid #e5e7eb;
-                                            font-weight: 600;
-                                            color: #374151;
-                                        "
-                                    >
-                                        Qty
-                                    </th>
-                                    <th
-                                        style="
-                                            text-align: right;
-                                            padding: 12px 16px;
-                                            border-bottom: 2px solid #e5e7eb;
-                                            font-weight: 600;
-                                            color: #374151;
-                                        "
-                                    >
-                                        Price
-                                    </th>
-                                    <th
-                                        style="
-                                            text-align: right;
-                                            padding: 12px 16px;
-                                            border-bottom: 2px solid #e5e7eb;
-                                            font-weight: 600;
-                                            color: #374151;
-                                        "
-                                    >
-                                        Subtotal
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr
-                                    v-for="item in order.order_items"
-                                    :key="item.id"
-                                    style="border-bottom: 1px solid #f3f4f6"
-                                >
-                                    <td
-                                        style="
-                                            text-align: left;
-                                            padding: 12px 16px;
-                                            color: #111827;
-                                        "
-                                    >
-                                        {{ item.book.title }}
-                                    </td>
-                                    <td
-                                        style="
-                                            text-align: center;
-                                            padding: 12px 16px;
-                                            color: #111827;
-                                        "
-                                    >
-                                        {{ item.quantity }}
-                                    </td>
-                                    <td
-                                        style="
-                                            text-align: right;
-                                            padding: 12px 16px;
-                                            color: #111827;
-                                        "
-                                    >
-                                        ৳{{ parseFloat(item.price).toFixed(2) }}
-                                    </td>
-                                    <td
-                                        style="
-                                            text-align: right;
-                                            padding: 12px 16px;
-                                            color: #111827;
-                                            font-weight: 500;
-                                        "
-                                    >
-                                        ৳{{
-                                            (
-                                                parseFloat(item.price) *
-                                                item.quantity
-                                            ).toFixed(2)
-                                        }}
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-
-                        <!-- Customer & Shipping Info -->
-                        <div
-                            class="order-meta-grid"
-                            style="
-                                display: flex;
-                                align-items: center;
-                                gap: 30px;
-                            "
-                        >
-                            <div
-                                class="customer-info"
-                                style="
-                                    display: flex;
-                                    align-items: center;
-                                    gap: 8px;
-                                "
-                            >
-                                <div
-                                    class="meta-label"
-                                    style="font-weight: 600; color: #4b5563"
-                                >
-                                    Customer:
-                                </div>
-                                <div
-                                    class="meta-value"
-                                    style="font-weight: 500"
-                                >
-                                    {{ order.user.name }}
-                                </div>
-                            </div>
-                            <div
-                                class="payment-info"
-                                style="
-                                    display: flex;
-                                    align-items: center;
-                                    gap: 8px;
-                                "
-                            >
-                                <div
-                                    class="meta-label"
-                                    style="font-weight: 600; color: #4b5563"
-                                >
-                                    Payment Method:
-                                </div>
-                                <div
-                                    class="meta-value"
-                                    style="font-weight: 500"
-                                >
-                                    {{ order.payment_method || "N/A" }}
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Shipping Address -->
-                        <div
-                            v-if="order.shipping_address"
-                            class="shipping-info-section"
-                        >
-                            <div class="section-title">Shipping Address</div>
-                            <div class="shipping-details">
-                                <div
-                                    v-if="order.shipping_address.full_name"
-                                    class="shipping-line"
-                                >
-                                    <span class="label">Name:</span>
-                                    {{ order.shipping_address.full_name }}
-                                </div>
-                                <div
-                                    v-if="order.shipping_address.phone"
-                                    class="shipping-line"
-                                >
-                                    <span class="label">Phone:</span>
-                                    {{ order.shipping_address.phone }}
-                                </div>
-                                <div
-                                    v-if="order.shipping_address.address_line1"
-                                    class="shipping-line"
-                                >
-                                    <span class="label">Address:</span>
-                                    {{ order.shipping_address.address_line1 }}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="order-footer">
-                            <div class="item-count">
-                                {{ getItemCountText(order.order_items.length) }}
-                            </div>
-                            <div class="order-date">
-                                {{ formatDate(order.created_at) }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Report Footer -->
-                <div class="report-footer">
-                    <div class="pagination-info">
-                        <p>
-                            Showing orders {{ orders.from }} -
-                            {{ orders.to }} of {{ orders.total }}
-                        </p>
-                    </div>
-                    <div class="report-meta">
-                        <p>Report generated by BookStore Management System</p>
-                        <p>shoyondeb18246@gmail.com</p>
-                    </div>
-                </div>
-
-                <!-- Watermark -->
-                <div class="watermark">CONFIDENTIAL</div>
-            </div>
         </div>
     </AppLayout>
 </template>
@@ -3080,7 +2801,9 @@ const printSingleOrder = (order) => {
                         .status-ready_for_pickup { background: #cffafe; color: #155e75; }
                         .status-completed { background: #dcfce7; color: #166534; }
                         .status-cancelled { background: #fee2e2; color: #991b1b; }
+                        .status-cod { background: #fed7aa; color: #9a3412; }
                         .status-payment_failed { background: #fef3c7; color: #92400e; }
+                        
                         
                         /* Items Table - Compact */
                         .invoice-items {
@@ -3378,396 +3101,6 @@ const printSingleOrder = (order) => {
     });
 };
 
-const printAllOrders = () => {
-    printType.value = "all";
-    printContent.value = true;
-
-    nextTick(() => {
-        setTimeout(() => {
-            const printWindow = window.open("", "_blank");
-            if (!printWindow) {
-                alert("Please allow popups for printing");
-                printContent.value = false;
-                return;
-            }
-
-            const content = printableContent.value.innerHTML;
-
-            printWindow.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Order History Report - PUSTOK</title>
-                    <meta charset="UTF-8">
-                    <style>
-                        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
-                        
-                        * {
-                            margin: 0;
-                            padding: 0;
-                            box-sizing: border-box;
-                        }
-                        
-                        body {
-                            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-                            padding: 20px;
-                            color: #333;
-                            background: white;
-                            line-height: 1.4;
-                            font-size: 11px;
-                        }
-                        
-                        .report {
-                            max-width: 800px;
-                            margin: 0 auto;
-                            position: relative;
-                        }
-                        
-                        /* Report Header - Compact */
-                        .report-header {
-                            display: flex;
-                            justify-content: space-between;
-                            align-items: flex-start;
-                            margin-bottom: 30px;
-                            padding-bottom: 15px;
-                            border-bottom: 2px solid #2c3e50;
-                        }
-                        
-                        .company-info {
-                            display: flex;
-                            align-items: center;
-                            gap: 15px;
-                        }
-                        
-                        .logo-circle {
-                            width: 60px;
-                            height: 60px;
-                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                            border-radius: 50%;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            font-size: 30px;
-                            color: white;
-                        }
-                        
-                        .company-info h1 {
-                            font-size: 22px;
-                            font-weight: 700;
-                            color: #2c3e50;
-                        }
-                        
-                        .company-details {
-                            color: #666;
-                            font-size: 12px;
-                            margin-top: 2px;
-                        }
-                        
-                        .report-title h2 {
-                            font-size: 20px;
-                            color: #2c3e50;
-                            margin-bottom: 4px;
-                            font-weight: 700;
-                        }
-                        
-                        .report-date {
-                            color: #666;
-                            font-size: 11px;
-                            text-align: right;
-                        }
-                        
-                        /* Summary Stats - Compact */
-                        .report-summary {
-                            margin-bottom: 30px;
-                        }
-                        
-                        .stats-grid {
-                            display: grid;
-                            grid-template-columns: repeat(4, 1fr);
-                            gap: 12px;
-                        }
-                        
-                        .stat-card {
-                            background: white;
-                            border: 1px solid #e9ecef;
-                            border-radius: 8px;
-                            padding: 15px;
-                            text-align: center;
-                        }
-                        
-                        .stat-number {
-                            font-size: 20px;
-                            font-weight: 700;
-                            color: #2c3e50;
-                            margin-bottom: 4px;
-                        }
-                        
-                        .stat-label {
-                            font-size: 10px;
-                            color: #666;
-                            text-transform: uppercase;
-                            letter-spacing: 0.5px;
-                        }
-                        
-                        /* Orders List - Compact */
-                        .orders-section h3 {
-                            font-size: 14px;
-                            color: #2c3e50;
-                            margin-bottom: 15px;
-                            font-weight: 600;
-                            text-transform: uppercase;
-                            letter-spacing: 0.5px;
-                        }
-                        
-                        .order-card {
-                            background: white;
-                            border: 1px solid #e9ecef;
-                            border-radius: 6px;
-                            padding: 16px;
-                            margin-bottom: 20px;
-                            page-break-inside: avoid;
-                        }
-                        
-                        .order-header {
-                            display: flex;
-                            justify-content: space-between;
-                            align-items: center;
-                            margin-bottom: 12px;
-                        }
-                        
-                        .order-meta {
-                            display: flex;
-                            align-items: center;
-                            gap: 8px;
-                        }
-                        
-                        .order-number {
-                            font-size: 14px;
-                            font-weight: 600;
-                            color: #2c3e50;
-                        }
-                        
-                        .status {
-                            padding: 3px 8px;
-                            border-radius: 12px;
-                            font-size: 9px;
-                            font-weight: 600;
-                            text-transform: uppercase;
-                            letter-spacing: 0.3px;
-                        }
-                        
-                        .status-pending { background: #fff3cd; color: #856404; }
-                        .status-payment_submitted { background: #ffedd5; color: #9a3412; }
-                        .status-payment_verification { background: #e0e7ff; color: #3730a3; }
-                        .status-paid { background: #dbeafe; color: #1e40af; }
-                        .status-processing { background: #f3e8ff; color: #6b21a8; }
-                        .status-shipped { background: #d1fae5; color: #065f46; }
-                        .status-ready_for_pickup { background: #cffafe; color: #155e75; }
-                        .status-completed { background: #dcfce7; color: #166534; }
-                        .status-cancelled { background: #fee2e2; color: #991b1b; }
-                        .status-payment_failed { background: #fef3c7; color: #92400e; }
-                        
-                        .order-details {
-                            display: flex;
-                            flex-direction: column;
-                            align-items: flex-end;
-                            gap: 2px;
-                        }
-                        
-                        .order-details .date {
-                            color: #666;
-                            font-size: 10px;
-                        }
-                        
-                        .order-details .total {
-                            font-size: 14px;
-                            font-weight: 600;
-                            color: #10b981;
-                        }
-                        
-                        .order-items {
-                            width: 100%;
-                            border-collapse: collapse;
-                            margin-bottom: 12px;
-                            font-size: 10px;
-                        }
-                        
-                        .order-items th {
-                            padding: 8px;
-                            text-align: left;
-                            background: #f8f9fa;
-                            color: #666;
-                            font-size: 9px;
-                            text-transform: uppercase;
-                            letter-spacing: 0.3px;
-                        }
-                        
-                        .order-items td {
-                            padding: 8px;
-                            border-bottom: 1px solid #eee;
-                        }
-                        
-                        .order-items .item-title {
-                            color: #2c3e50;
-                            font-weight: 500;
-                        }
-                        
-                        /* Order Meta Grid */
-                        .order-meta-grid {
-                            display: grid;
-                            grid-template-columns: 1fr 1fr;
-                            gap: 15px;
-                            margin: 15px 0;
-                            padding: 12px;
-                            background: #f8f9fa;
-                            border-radius: 4px;
-                            font-size: 10px;
-                        }
-                        
-                        .meta-label {
-                            font-weight: 600;
-                            color: #4b5563;
-                            margin-bottom: 2px;
-                        }
-                        
-                        .meta-value {
-                            color: #111827;
-                        }
-                        
-                        /* Shipping Info Section */
-                        .shipping-info-section {
-                            margin: 15px 0;
-                            padding: 12px;
-                            background: #f0f9ff;
-                            border-radius: 4px;
-                            border: 1px solid #e0f2fe;
-                            font-size: 10px;
-                        }
-                        
-                        .section-title {
-                            font-size: 11px;
-                            font-weight: 600;
-                            color: #0369a1;
-                            margin-bottom: 8px;
-                        }
-                        
-                        .shipping-details {
-                            color: #374151;
-                        }
-                        
-                        .shipping-line {
-                            margin-bottom: 4px;
-                            line-height: 1.3;
-                        }
-                        
-                        .shipping-line .label {
-                            font-weight: 600;
-                            color: #4b5563;
-                            margin-right: 4px;
-                        }
-                        
-                        .order-footer {
-                            display: flex;
-                            justify-content: space-between;
-                            align-items: center;
-                            color: #666;
-                            font-size: 9px;
-                            padding-top: 8px;
-                            border-top: 1px solid #eee;
-                        }
-                        
-                        /* Report Footer */
-                        .report-footer {
-                            padding-top: 20px;
-                            border-top: 1px solid #eee;
-                            display: flex;
-                            justify-content: space-between;
-                            align-items: flex-end;
-                        }
-                        
-                        .pagination-info,
-                        .report-meta {
-                            color: #666;
-                            font-size: 9px;
-                        }
-                        
-                        /* Watermark */
-                        .watermark {
-                            position: fixed;
-                            top: 50%;
-                            left: 50%;
-                            transform: translate(-50%, -50%) rotate(-45deg);
-                            font-size: 40px;
-                            color: rgba(0, 0, 0, 0.03);
-                            font-weight: 800;
-                            pointer-events: none;
-                            z-index: -1;
-                        }
-                        
-                        /* Utility Classes */
-                        .text-center { text-align: center; }
-                        .text-right { text-align: right; }
-                        
-                        /* Print Optimizations */
-                        @media print {
-                            body {
-                                padding: 10px !important;
-                                font-size: 9px !important;
-                            }
-                            
-                            .report {
-                                max-width: 100% !important;
-                            }
-                            
-                            * {
-                                -webkit-print-color-adjust: exact !important;
-                                print-color-adjust: exact !important;
-                            }
-                            
-                            /* Page break control */
-                            .order-card {
-                                page-break-inside: avoid;
-                                page-break-after: auto;
-                            }
-                            
-                            /* Compact tables for print */
-                            .order-items {
-                                font-size: 8px !important;
-                            }
-                            
-                            .order-items th,
-                            .order-items td {
-                                padding: 4px 6px !important;
-                            }
-                            
-                            @page {
-                                margin: 10mm;
-                                size: A4;
-                            }
-                        }
-                    </style>
-                </head>
-                <body>
-                    ${content}
-                </body>
-                </html>
-            `);
-
-            printWindow.document.close();
-
-            setTimeout(() => {
-                printWindow.focus();
-                printWindow.print();
-
-                printWindow.onafterprint = () => {
-                    printWindow.close();
-                    printContent.value = false;
-                };
-            }, 500);
-        }, 300);
-    });
-};
-
 const getTotalRevenue = () => {
     return props.orders.data
         .reduce(
@@ -3797,11 +3130,31 @@ const getStatusDisplayName = (status) => {
         completed: "COMPLETED",
         cancelled: "CANCELLED",
         payment_failed: "PAYMENT FAILED",
+        cod: "CASH ON DELIVERY",
+        COD: "CASH ON DELIVERY",
     };
     return statusMap[status] || status.toUpperCase();
 };
 
 const statusClasses = {
+    cod: {
+        container:
+            "bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 shadow-sm hover:shadow-md hover:border-orange-300",
+        iconBg: "bg-gradient-to-r from-orange-500 to-amber-500",
+        icon: "text-white",
+        text: "text-orange-800",
+        gradient: "from-orange-500 to-amber-500",
+        description: "Cash on Delivery order",
+    },
+    COD: {
+        container:
+            "bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 shadow-sm hover:shadow-md hover:border-orange-300",
+        iconBg: "bg-gradient-to-r from-orange-500 to-amber-500",
+        icon: "text-white",
+        text: "text-orange-800",
+        gradient: "from-orange-500 to-amber-500",
+        description: "Cash on Delivery order",
+    },
     pending: {
         container:
             "bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-200 shadow-sm hover:shadow-md hover:border-yellow-300",
@@ -3921,6 +3274,8 @@ const getStatusBackground = (status) => {
         completed: "linear-gradient(135deg, #bbf7d0, #4ade80)",
         cancelled: "linear-gradient(135deg, #fee2e2, #fca5a5)",
         payment_failed: "linear-gradient(135deg, #fef3c7, #fbbf24)",
+        cod: "linear-gradient(135deg, #fed7aa, #fb923c)",
+        COD: "linear-gradient(135deg, #fed7aa, #fb923c)",
     };
     return statusMap[status] || "linear-gradient(135deg, #f3f4f6, #d1d5db)";
 };
@@ -3937,6 +3292,8 @@ const getStatusColor = (status) => {
         completed: "#166534",
         cancelled: "#991b1b",
         payment_failed: "#92400e",
+        cod: "#9a3412",
+        COD: "#9a3412",
     };
     return statusMap[status] || "#374151";
 };

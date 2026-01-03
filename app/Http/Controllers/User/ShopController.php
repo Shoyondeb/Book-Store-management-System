@@ -14,6 +14,7 @@ use App\Http\Controllers\Controller;
 
 class ShopController extends Controller
 {
+    // In ShopController.php home() method
     public function home(Request $request)
     {
         $books = Book::with(['category', 'author', 'reviews'])
@@ -29,10 +30,20 @@ class ShopController extends Controller
             return $book;
         });
 
+        // Get ALL books for category grouping (not paginated)
+        $allBooksForCategories = Book::with(['category', 'author', 'reviews'])
+            ->get()
+            ->map(function ($book) {
+                $book->average_rating = $book->reviews->avg('rating') ?? 0;
+                $book->rating_count = $book->reviews->count();
+                return $book;
+            });
+
         return Inertia::render('Shop/Home', [
             'books' => $books,
+            'allBooks' => $allBooksForCategories, // Add this
             'categories' => Category::all(),
-            'authors' => Author::all(), // Add authors to the response
+            'authors' => Author::all(),
             'filters' => $request->only(['search', 'category', 'author', 'min_price', 'max_price'])
         ]);
     }
